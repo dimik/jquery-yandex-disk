@@ -391,41 +391,32 @@ YaDisk.TextView.prototype = {
     },
     toXML: function () {
         var data = this._data.split(':'),
-            root = document.createElementNS('DAV:', 'multistatus'),
-            response = this._createNode('response'),
-            propstat = this._createNode('propstat'),
-            status = this._createNode('status', 'HTTP/1.1 200 OK'),
-            prop = this._createNode('prop');
-
-        root.appendChild(response);
-        response.appendChild(propstat);
-        propstat.appendChild(status);
-        propstat.appendChild(prop);
+            result = [];
 
         for(var i = 0, len = data.length; i < len; i += 2) {
-            prop.appendChild(
-                this._createNode(data[i], data[i + 1])
+            result.push(
+                '<' + data[i] + '>' + data[i + 1] + '</' + data[i] + '>'
             );
         }
 
-        return root;
-    },
-    toString: function () {
-        return this._data;
+        return $([
+            '<multistatus xmlns="DAV:">',
+                '<response>',
+                    '<propstat>',
+                        '<status>HTTP/1.1 200 OK</status>',
+                        '<prop>',
+                            result.join(''),
+                        '</prop>',
+                    '</propstat>',
+                '</response>',
+            '</multistatus>'
+        ].join('')).get(0);
     },
     valueOf: function () {
         return this._data;
     },
-    _createNode: function (name, text) {
-        var node = document.createElement(name);
-
-        if(text) {
-            node.appendChild(
-                document.createTextNode(text)
-            );
-        }
-
-        return node;
+    toString: function () {
+        return this.valueOf();
     }
 };
 
