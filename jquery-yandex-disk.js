@@ -7,7 +7,7 @@ YaDisk.Path = function (cwd) {
 YaDisk.Path.prototype = {
     constructor: YaDisk.Path,
     normalize: function (path) {
-        var sep = this.constructor.SEP,
+        var sep = YaDisk.Path.SEP,
             dirs = path.split(sep),
             result = [];
 
@@ -34,7 +34,7 @@ YaDisk.Path.prototype = {
     },
     resolve: function () {
         var args = Array.prototype.slice.call(arguments, 0),
-            sep = this.constructor.SEP,
+            sep = YaDisk.Path.SEP,
             len = args.length,
             path, result = [];
 
@@ -57,7 +57,7 @@ YaDisk.Path.prototype = {
     },
     join: function () {
         var args = Array.prototype.slice.call(arguments, 0),
-            sep = this.constructor.SEP;
+            sep = YaDisk.Path.SEP;
 
         return this.normalize(args.join(sep));
     }
@@ -250,7 +250,7 @@ YaDisk.Model.prototype = {
     getUrl: function (path) {
         var args = Array.prototype.slice.call(arguments, 0);
 
-        return this.constructor.URL + args.join('/');
+        return YaDisk.Model.URL + args.join('/');
     },
     getHeaders: function (headers) {
         return $.extend({
@@ -272,7 +272,7 @@ function YaDisk(options) {
         return new YaDisk(options);
     }
 
-    YaDisk.DirectoryStack.call(this, this.constructor.HOME);
+    YaDisk.DirectoryStack.call(this, YaDisk.HOME);
     this._model = new YaDisk.Model(options.token);
 };
 
@@ -303,7 +303,7 @@ YaDisk.prototype = $.extend({}, YaDisk.DirectoryStack.prototype, {
     },
     cd: function (path) {
         if(!path || path === '~') {
-            this.pushd(this.constructor.HOME);
+            this.pushd(YaDisk.HOME);
         }
         else {
             this.pushd(path);
