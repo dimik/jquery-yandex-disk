@@ -29,9 +29,6 @@ YaDisk.Path.prototype = {
 
         return result.join(sep);
     },
-    _isAbsolute: function (path) {
-        return path.charAt(0) === this.constructor.SEP;
-    },
     resolve: function () {
         var args = Array.prototype.slice.call(arguments, 0),
             sep = YaDisk.Path.SEP,
@@ -45,7 +42,7 @@ YaDisk.Path.prototype = {
 
             result.unshift(path);
 
-            if(this._isAbsolute(path)) {
+            if(YaDisk.Path.isAbsolute(path)) {
                 break;
             }
             else if(len === 0) {
@@ -64,6 +61,18 @@ YaDisk.Path.prototype = {
 };
 
 YaDisk.Path.SEP = '/';
+
+/**
+ * Return true if path is absolute.
+ * @function
+ * @static
+ * @name Path.isAbsolute
+ * @param {String} path
+ * @returns {Boolean} Whether the path is absolute.
+ */
+YaDisk.Path.isAbsolute = function (path) {
+    return path.charAt(0) === this.SEP;
+};
 
 YaDisk.DirectoryStack = function (cwd) {
     YaDisk.Path.call(this, cwd);
