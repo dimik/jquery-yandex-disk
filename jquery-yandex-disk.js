@@ -406,6 +406,89 @@ YaDisk.prototype = $.extend({}, YaDisk.DirectoryStack.prototype, {
 
 YaDisk.HOME = '/';
 
+YaDisk.ImageView = function (src, type) {
+    this._data = src;
+};
+
+YaDisk.ImageView.prototype = {
+    constructor: YaDisk.ImageView,
+    getType: function () {
+        return 'image';
+    },
+    valueOf: function () {
+        return this._data;
+    },
+    toDataUrl: function (type) {
+        var defer = $.Deferred(),
+            reader = new FileReader(),
+            blob = this.toBlob(type);
+
+        reader.onload = function (e) {
+            defer.resolve(e.target.result);
+        };
+        reader.onerror = function (e) {
+            defer.reject(e.target.error);
+        };
+        reader.onprogress = function (e) {
+            defer.notify(
+                Math.round((e.loaded / e.total) * 100)
+            );
+        };
+
+        reader.readAsDataURL(blob);
+
+        return defer.promise();
+    },
+    toImage: function (type) {
+        var img = new Image();
+
+        img.src = URL.createObjectURL(this.toBlob(type));
+
+        return img;
+    },
+    toBlob: function (type) {
+        var data = this._data,
+            buffer = [];
+
+        for(var i = 0, len = data.length; i < len; i++) {
+            buffer.push(
+                data.charCodeAt(i) & 0xff
+            );
+        }
+
+        return new Blob([ new Uint8Array(buffer) ], { type: type || 'application/octet-stream' });
+    }
+};
+
+/**
+ * ArrayBuffer implementation.
+ * YaDisk.ImageView.dataURLtoBlob = function (dataURL) {
+ *     var data = atob(dataURL.split(',')[1]),
+ *         bytesLength = byteString.length,
+ *         type = dataURL.split(',')[0].split(':')[1].split(';')[0],
+ *         buffer = new ArrayBuffer(bytesLength),
+ *         bufferView = new Uint8Array(buffer);
+ *
+ *     for(var i = 0; i < bytesLength; i++) {
+ *         bufferView[i] = data.charCodeAt(i);
+ *     }
+ *
+ *     return new Blob([ bufferView ], { type: type });
+ * };
+ */
+
+YaDisk.ImageView.dataURLtoBlob = function (dataURL) {
+    var data = atob(dataURL.split(',')[1]),
+        type = dataURL.split(',')[0].split(':')[1].split(';')[0],
+        buffer = [];
+
+    for(var i = 0, len = data.length; i < len; i++) {
+        buffer.push(data.charCodeAt(i));
+    }
+
+    return new Blob([ new Uint8Array(buffer) ], { type: type });
+};
+
 YaDisk.XMLView = function (xml) {
     this._data = xml;
 };
