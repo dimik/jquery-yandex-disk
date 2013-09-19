@@ -129,6 +129,10 @@ YaDisk.Model.prototype = {
         return this._send({
             url: this.getUrl(options.path),
             type: 'GET',
+            beforeSend: function (xhr) {
+                xhr.overrideMimeType((options.type || 'application/octet-stream') + '; charset=x-user-defined');
+                // xhr.responseType = 'blob';
+            },
             headers: this.getHeaders()
         });
     },
@@ -139,6 +143,10 @@ YaDisk.Model.prototype = {
             data: {
                 size: options.size || 'M'
             },
+            beforeSend: function (xhr) {
+                xhr.overrideMimeType((options.type || 'image/png') + '; charset=x-user-defined');
+                // xhr.overrideMimeType('text/plain; charset=x-user-defined');
+            },
             headers: this.getHeaders()
         });
     },
@@ -148,9 +156,8 @@ YaDisk.Model.prototype = {
             type: 'PUT',
             data: options.file,
             processData: false,
-            headers: this.getHeaders({
-                'Content-Type': 'application/' + options.type || 'binary'
-            })
+            contentType: options.type || false,
+            headers: this.getHeaders()
         });
     },
     cp: function (options) {
@@ -297,11 +304,26 @@ YaDisk.prototype = $.extend({}, YaDisk.DirectoryStack.prototype, {
 
         if(model.isMethod(method)) {
             model[method]($.extend({}, args, { path: path }))
-                .then(function (res) {
-                    defer.resolve(
-                        typeof res === 'string'?
-                            new YaDisk.TextView(res) : new YaDisk.XMLView(res)
-                    );
+                .then(function (res, status, jqXHR) {
+                    var contentType = (jqXHR.getResponseHeader('content-type') || '').split(';')[0];
+
+                    switch(contentType) {
+                        case 'application/xml': // ls, df
+                            defer.resolve(new YaDisk.XMLView(res));
+                            break;
+                        case 'text/plain': // id
+                            defer.resolve(new YaDisk.TextView(res));
+                            break;
+                        case 'image/jpeg': // getPreview
+                        case 'image/png':
+                            defer.resolve((new YaDisk.ImageView(res)).toImage(contentType));
+                            break;
+                        default: // get
+                            defer.resolve(res);
+                    }
+                })
+                .fail(function () {
+                    defer.reject.apply(defer, arguments);
                 });
         }
         else {
